@@ -11,7 +11,6 @@ set(SOURCES "audio_codecs/audio_codec.cc"
             "display/no_display.cc"
             "display/lcd_display.cc"
             "display/ssd1306_display.cc"
-            "boards/lilygo-t-circle-s3/esp_lcd_gc9d01n.c"
             "protocols/protocol.cc"
             "iot/thing.cc"
             "iot/thing_manager.cc"
@@ -35,12 +34,19 @@ list(APPEND SOURCES ${BOARD_COMMON_SOURCES})
 list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/boards/common)
 
 # 根据 BOARD_TYPE 配置添加对应的板级文件
-if(CONFIG_BOARD_TYPE_XINGZHI_Cube_OLED)
-    set(BOARD_TYPE "xingzhi-cube-oled")
-elseif(CONFIG_BOARD_TYPE_XINGZHI_Cube_TFT)
-    set(BOARD_TYPE "xingzhi-cube-tft")
+if(CONFIG_BOARD_TYPE_XINGZHI_Cube_0_96OLED_WIFI)
+    set(BOARD_TYPE "xingzhi-cube-0.96oled-wifi")
+elseif(CONFIG_BOARD_TYPE_XINGZHI_Cube_0_96OLED_ML307)
+    set(BOARD_TYPE "xingzhi-cube-0.96oled-ml307")
+elseif(CONFIG_BOARD_TYPE_XINGZHI_Cube_1_54TFT_WIFI)
+    set(BOARD_TYPE "xingzhi-cube-1.54tft-wifi")
+elseif(CONFIG_BOARD_TYPE_XINGZHI_Cube_1_54TFT_ML307)
+    set(BOARD_TYPE "xingzhi-cube-1.54tft-ml307")
 endif()
-file(GLOB BOARD_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.cc)
+file(GLOB BOARD_SOURCES 
+    ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.c
+)
 list(APPEND SOURCES ${BOARD_SOURCES})
 
 if(CONFIG_CONNECTION_TYPE_MQTT_UDP)
@@ -53,6 +59,18 @@ if(CONFIG_USE_AUDIO_PROCESSING)
     list(APPEND SOURCES "audio_processing/audio_processor.cc" "audio_processing/wake_word_detect.cc")
 endif()
 
+# 根据Kconfig选择语言目录
+if(CONFIG_LANGUAGE_ZH_CN)
+    set(LANG_DIR "zh-CN")
+elseif(CONFIG_LANGUAGE_EN_US)
+    set(LANG_DIR "en-US")
+endif()
+
+# 定义生成路径
+set(LANG_JSON "${CMAKE_CURRENT_SOURCE_DIR}/assets/${LANG_DIR}/language.json")
+set(LANG_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/assets/lang_config.h")
+file(GLOB ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/assets/${LANG_DIR}/*.p3)
+
 # 如果目标芯片是 ESP32，则排除特定文件
 if(CONFIG_IDF_TARGET_ESP32)
     # 排除 "audio_codecs/box_audio_codec.cc" 和 "audio_codecs/cores3_audio_codec.cc"
@@ -60,8 +78,6 @@ if(CONFIG_IDF_TARGET_ESP32)
                              "audio_codecs/cores3_audio_codec.cc"
                              "audio_codecs/es8388_audio_codec.cc")
 endif()
-
-file(GLOB ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/assets/zh/*.p3)
 
 idf_component_register(SRCS ${SOURCES}
                     EMBED_FILES ${ASSETS}
@@ -73,3 +89,20 @@ idf_component_register(SRCS ${SOURCES}
 target_compile_definitions(${COMPONENT_LIB}
                     PRIVATE BOARD_TYPE=\"${BOARD_TYPE}\"
                     )
+
+# 添加生成规则
+add_custom_command(
+    OUTPUT ${LANG_HEADER}
+    COMMAND python ${PROJECT_DIR}/scripts/gen_lang.py
+            --input "${LANG_JSON}"
+            --output "${LANG_HEADER}"
+    DEPENDS 
+        ${LANG_JSON}
+        ${PROJECT_DIR}/scripts/gen_lang.py
+    COMMENT "Generating ${LANG_DIR} language config"
+)
+
+# 强制建立生成依赖
+add_custom_target(lang_header ALL
+    DEPENDS ${LANG_HEADER}
+)
