@@ -3,11 +3,10 @@ set(SOURCES "audio_codecs/audio_codec.cc"
             "audio_codecs/box_audio_codec.cc"
             "audio_codecs/es8311_audio_codec.cc"
             "audio_codecs/es8388_audio_codec.cc"
-            "audio_codecs/cores3_audio_codec.cc"
             "led/single_led.cc"
             "led/circular_strip.cc"
+            "led/gpio_led.cc"
             "display/display.cc"
-            "display/no_display.cc"
             "display/lcd_display.cc"
             "display/oled_display.cc"
             "protocols/protocol.cc"
@@ -42,7 +41,7 @@ elseif(CONFIG_BOARD_TYPE_XINGZHI_Cube_1_54TFT_WIFI)
 elseif(CONFIG_BOARD_TYPE_XINGZHI_Cube_1_54TFT_ML307)
     set(BOARD_TYPE "xingzhi-cube-1.54tft-ml307")
 endif()
-file(GLOB BOARD_SOURCES 
+file(GLOB BOARD_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.c
 )
@@ -64,8 +63,12 @@ endif()
 # 根据Kconfig选择语言目录
 if(CONFIG_LANGUAGE_ZH_CN)
     set(LANG_DIR "zh-CN")
+elseif(CONFIG_LANGUAGE_ZH_TW)
+    set(LANG_DIR "zh-TW")
 elseif(CONFIG_LANGUAGE_EN_US)
     set(LANG_DIR "en-US")
+elseif(CONFIG_LANGUAGE_JA_JP)
+    set(LANG_DIR "ja-JP")
 endif()
 
 # 定义生成路径
@@ -76,10 +79,10 @@ file(GLOB COMMON_SOUNDS ${CMAKE_CURRENT_SOURCE_DIR}/assets/common/*.p3)
 
 # 如果目标芯片是 ESP32，则排除特定文件
 if(CONFIG_IDF_TARGET_ESP32)
-    # 排除 "audio_codecs/box_audio_codec.cc" 和 "audio_codecs/cores3_audio_codec.cc"
     list(REMOVE_ITEM SOURCES "audio_codecs/box_audio_codec.cc"
-                             "audio_codecs/cores3_audio_codec.cc"
-                             "audio_codecs/es8388_audio_codec.cc")
+                             "audio_codecs/es8388_audio_codec.cc"
+                             "led/gpio_led.cc"
+                             )
 endif()
 
 idf_component_register(SRCS ${SOURCES}
@@ -89,6 +92,10 @@ idf_component_register(SRCS ${SOURCES}
                     )
 
 # 使用 target_compile_definitions 来定义 BOARD_TYPE, BOARD_NAME
+# 如果 BOARD_NAME 为空，则使用 BOARD_TYPE
+if(NOT BOARD_NAME)
+    set(BOARD_NAME ${BOARD_TYPE})
+endif()
 target_compile_definitions(${COMPONENT_LIB}
                     PRIVATE BOARD_TYPE=\"${BOARD_TYPE}\" BOARD_NAME=\"${BOARD_NAME}\"
                     )
@@ -99,7 +106,7 @@ add_custom_command(
     COMMAND python ${PROJECT_DIR}/scripts/gen_lang.py
             --input "${LANG_JSON}"
             --output "${LANG_HEADER}"
-    DEPENDS 
+    DEPENDS
         ${LANG_JSON}
         ${PROJECT_DIR}/scripts/gen_lang.py
     COMMENT "Generating ${LANG_DIR} language config"
