@@ -9,7 +9,7 @@ set(SOURCES "audio_codecs/audio_codec.cc"
             "display/display.cc"
             "display/no_display.cc"
             "display/lcd_display.cc"
-            "display/ssd1306_display.cc"
+            "display/oled_display.cc"
             "protocols/protocol.cc"
             "iot/thing.cc"
             "iot/thing_manager.cc"
@@ -54,8 +54,11 @@ elseif(CONFIG_CONNECTION_TYPE_WEBSOCKET)
     list(APPEND SOURCES "protocols/websocket_protocol.cc")
 endif()
 
-if(CONFIG_USE_AUDIO_PROCESSING)
-    list(APPEND SOURCES "audio_processing/audio_processor.cc" "audio_processing/wake_word_detect.cc")
+if(CONFIG_USE_AUDIO_PROCESSOR)
+    list(APPEND SOURCES "audio_processing/audio_processor.cc")
+endif()
+if(CONFIG_USE_WAKE_WORD_DETECT)
+    list(APPEND SOURCES "audio_processing/wake_word_detect.cc")
 endif()
 
 # 根据Kconfig选择语言目录
