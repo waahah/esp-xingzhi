@@ -4,6 +4,7 @@
 ## 项目目的
 
 本项目是一个开源项目，以 MIT 许可证发布，允许任何人免费使用，并可以用于商业用途。
+此仓库主要用来备份整合星智烧录所需的固件
 
 <div style="display: flex; justify-content: center; gap:100px">
   <a href="docs/v1/wmnologo_xingzhi_1.54.jpg" target="_blank" title="无名科技Nologo-星智-1.54">
