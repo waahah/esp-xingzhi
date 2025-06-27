@@ -15,6 +15,10 @@
 #define TAG "Display"
 
 Display::Display() {
+    // Load theme from settings
+    Settings settings("display", false);
+    current_theme_name_ = settings.GetString("theme", "light");
+
     // Notification timer
     esp_timer_create_args_t notification_timer_args = {
         .callback = [](void *arg) {
@@ -71,7 +75,9 @@ Display::~Display() {
         lv_obj_del(battery_label_);
         lv_obj_del(emotion_label_);
     }
-
+    if( low_battery_popup_ != nullptr ) {
+        lv_obj_del(low_battery_popup_);
+    }
     if (pm_lock_ != nullptr) {
         esp_pm_lock_delete(pm_lock_);
     }
@@ -102,6 +108,10 @@ void Display::ShowNotification(const char* notification, int duration_ms) {
 
     esp_timer_stop(notification_timer_);
     ESP_ERROR_CHECK(esp_timer_start_once(notification_timer_, duration_ms * 1000));
+}
+
+void Display::UpdateBatteryPercentage(int percent) {
+    
 }
 
 void Display::Update() {
@@ -148,6 +158,8 @@ void Display::Update() {
             battery_icon_ = icon;
             lv_label_set_text(battery_label_, battery_icon_);
         }
+
+        UpdateBatteryPercentage(battery_level);
 
         if (low_battery_popup_ != nullptr) {
             if (strcmp(icon, FONT_AWESOME_BATTERY_EMPTY) == 0 && discharging) {
@@ -248,4 +260,10 @@ void Display::SetChatMessage(const char* role, const char* content) {
         return;
     }
     lv_label_set_text(chat_message_label_, content);
+}
+
+void Display::SetTheme(const std::string& theme_name) {
+    current_theme_name_ = theme_name;
+    Settings settings("display", true);
+    settings.SetString("theme", theme_name);
 }

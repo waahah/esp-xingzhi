@@ -32,7 +32,11 @@ list(APPEND SOURCES ${BOARD_COMMON_SOURCES})
 list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/boards/common)
 
 # 根据 BOARD_TYPE 配置添加对应的板级文件
-if(CONFIG_BOARD_TYPE_XINGZHI_Cube_0_96OLED_WIFI)
+if(CONFIG_BOARD_TYPE_XINGZHI_Cube_0_85TFT_WIFI)
+    set(BOARD_TYPE "xingzhi-cube-0.85tft-wifi")
+elseif(CONFIG_BOARD_TYPE_XINGZHI_Cube_0_85TFT_ML307)
+    set(BOARD_TYPE "xingzhi-cube-0.85tft-ml307")
+elseif(CONFIG_BOARD_TYPE_XINGZHI_Cube_0_96OLED_WIFI)
     set(BOARD_TYPE "xingzhi-cube-0.96oled-wifi")
 elseif(CONFIG_BOARD_TYPE_XINGZHI_Cube_0_96OLED_ML307)
     set(BOARD_TYPE "xingzhi-cube-0.96oled-ml307")

@@ -166,6 +166,13 @@ idf.py monitor -p COM8
 
 
 
+## 开发者文档
+
+- [开发板定制指南](main/boards/README.md) - 学习如何为小智创建自定义开发板适配
+- [物联网控制模块](main/iot/README.md) - 了解如何通过AI语音控制物联网设备
+
+
+
 ## 已实现功能
 
 - [x] Wi-Fi / ML307 Cat.1 4G
